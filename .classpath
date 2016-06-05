@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/multij-1.8.201606031427.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-all-9.3.9.v20160517-uber.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.jgit-3.7.1.201504261725-r.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

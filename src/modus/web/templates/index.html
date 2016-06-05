@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<link type="text/css" rel="stylesheet" href="index_files/xonomy/xonomy.css"/>
+	<script type="text/javascript" src="index_files/jquery-2.2.4.min.js"></script>
+	<script type="text/javascript" src="index_files/xonomy/xonomy.js"></script>
+	<script type="text/javascript">
+		function start() {
+			var xml = "<object name='root'>"
+				+ "<object name='a1'/>"
+				+ "<object name='list1'/>"
+				+ "<object name='list2'/>"
+				+ "<object name='a2'/>"
+				+ "<object name='list3'/>"
+				+ "</object>";
+			var editor = document.getElementById("editor");
+			
+			Xonomy.render(xml, editor, null);
+		}
+	</script>
+</head>
+<body onload="start()">
+<div id="editor"></div>
+<hr>
+<footer>
+This website uses <a href="http://lexiconista.com/xonomy/">Xonomy</a>
+</footer>
+</body>
