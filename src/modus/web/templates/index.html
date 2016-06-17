@@ -6,14 +6,28 @@
 	<script type="text/javascript" src="index_files/jquery-2.2.4.min.js"></script>
 	<script type="text/javascript" src="index_files/xonomy/xonomy.js"></script>
 	<script type="text/javascript">
+		var databasePost = "database/post/";
+
 		function save(htmlID) {
-			// TODO
-			console.log("TODO");
+			var xml = Xonomy.harvest();
+			var $xml = $(xml);
+			var url = databasePost + $xml.attr("name") + ".xml";
+			var postData = "xml=" + xml;
+
+			$.post(url, postData, function (message) {
+				$("#messages").html("<span>" + message + "</span>");
+			}).fail(function(_, message) {
+				$("#messages").html("<span style='color: red;'>" + message + "</span>");
+			});
 		}
 		
 		function load(htmlID) {
-			// TODO
-			console.log("TODO");
+			$.get("url", function (message) {
+				// TODO
+				console.log("TODO");
+			}).fail(function(_, message) {
+				$("#messages").html("<span style='color: red;'>" + message + "</span>");
+			});
 		}
 		
 		function newObject(htmlID) {
@@ -132,10 +146,25 @@
 			
 			Xonomy.render(xml, editor, specification);
 		}
+
+		function clearMessages() {
+			$("#messages").empty();
+		}
 	</script>
 </head>
 <body onload="start()">
 <div id="editor"></div>
+<hr>
+<table style="width:100%">
+	<tr>
+		<td>
+			<div id="messages"></div>
+		</td>
+		<td style="width:5%">
+			<a href="javascript:void(0);" onclick="clearMessages()">x</a>
+		</td>
+	</tr>
+</table>
 <hr>
 <footer>
 This website uses <a href="http://lexiconista.com/xonomy/">Xonomy</a>

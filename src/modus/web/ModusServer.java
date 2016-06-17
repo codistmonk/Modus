@@ -1,27 +1,19 @@
 package modus.web;
 
-import static multij.tools.Tools.array;
-import static multij.tools.Tools.debugPrint;
+import static multij.tools.Tools.*;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import multij.tools.CommandLineArgumentsParser;
+import multij.tools.IllegalInstantiationException;
+import multij.tools.Launcher;
 
-import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-
-import multij.tools.IllegalInstantiationException;
-import multij.tools.Launcher;
 
 /**
  * @author codistmonk (creation 2016-06-05)
@@ -34,14 +26,17 @@ public final class ModusServer {
 	
 	/**
 	 * @param commandLineArguments
-	 * <br>Unused
+	 * <br>Must not be null
 	 * @throws Exception 
 	 */
 	public static final void main(final String... commandLineArguments) throws Exception {
+		final CommandLineArgumentsParser arguments = new CommandLineArgumentsParser(commandLineArguments);
 		final Server server = new Server();
+		final int port = arguments.get1("port", 1443);
 		final SslContextFactory sslContextFactory = new SslContextFactory();
-		final File keystoreFile = new File("keystore.jks");
-		final String keystorePass = "YJ2tZvFT";
+		final String keystorePath = arguments.get("keystore", "keystore.jks");
+		final String keystorePass = arguments.get("keystorePass", "YJ2tZvFT");
+		final File keystoreFile = new File(keystorePath);
 		
 		if (!keystoreFile.exists()) {
 			final Process keytool = Runtime.getRuntime().exec(array(
@@ -65,7 +60,7 @@ public final class ModusServer {
 		
 		final ServerConnector https = new ServerConnector(server, sslContextFactory);
 		
-		https.setPort(1443);
+		https.setPort(port);
 		
 		server.setConnectors(array(https));
 		
@@ -89,27 +84,6 @@ public final class ModusServer {
 		server.start();
 		server.dumpStdErr();
 		server.join();
-	}
-	
-}
-
-/**
- * @author codistmonk (creation 2016-06-05)
- */
-final class ModusHandler extends AbstractHandler {
-	
-	@Override
-	public final void handle(final String target, final Request baseRequest, final HttpServletRequest request, final HttpServletResponse response)
-			throws IOException, ServletException {
-		debugPrint(target);
-		response.setContentType("text/html");
-		response.setStatus(HttpServletResponse.SC_OK);
-		
-		final PrintWriter out = response.getWriter();
-		
-		out.println("<h1>hi</h1>");
-		
-		baseRequest.setHandled(true);
 	}
 	
 }
