@@ -6,17 +6,131 @@
 	<script type="text/javascript" src="index_files/jquery-2.2.4.min.js"></script>
 	<script type="text/javascript" src="index_files/xonomy/xonomy.js"></script>
 	<script type="text/javascript">
+		function save(htmlID) {
+			// TODO
+			console.log("TODO");
+		}
+		
+		function load(htmlID) {
+			// TODO
+			console.log("TODO");
+		}
+		
+		function newObject(htmlID) {
+			return Xonomy.newElementChild(htmlID, "<object name=''/>");
+		}
+		
+		function newProof(htmlID) {
+			return Xonomy.newElementChild(htmlID, "<proof/>");
+		}
+		
+		function newDeduction(htmlID) {
+			return Xonomy.newElementChild(htmlID, "<object name=''><object name='forall'/><object name='parameters'/><object name='conditions'/><object name='implies'/><object name='conclusions'/></object>");
+		}
+		
+		function newApplication(htmlID) {
+			return Xonomy.newElementChild(htmlID, "<object name=''><object name='apply'/><object name='rule'/><object name='on'/><object name='condition'/></object>");
+		}
+		
+		function newBinding(htmlID) {
+			return Xonomy.newElementChild(htmlID, "<object name=''>TODO</object>");
+		}
+		
+		function newSubstitution(htmlID) {
+			return Xonomy.newElementChild(htmlID, "<object name=''>TODO</object>");
+		}
+		
+		function isReference(jsElement, name) {
+			return jsElement.children.length == 0
+				&& (!name || name === jsElement.getAttributeValue("name"));
+		}
+		
+		function isForallSymbol(jsElement) {
+			return isReference(jsElement, "forall");
+		}
+		
+		function isImpliesSymbol(jsElement) {
+			return isReference(jsElement, "implies");
+		}
+		
+		function isEqualSymbol(jsElement) {
+			return isReference(jsElement, "=");
+		}
+		
+		function isDeduction(jsElement) {
+			return jsElement.children.length == 5
+				&& isForallSymbol(jsElement.children[0])
+				&& isImpliesSymbol(jsElement.children[3]);
+		}
+		
+		function isRule(jsElement) {
+			return jsElement.children.length == 3
+				&& isImpliesSymbol(jsElement.children[1]);
+		}
+		
+		function isEquality(jsElement) {
+			return jsElement.children.length == 3
+				&& isEqualSymbol(jsElement.children[1]);
+		}
+		
+		var jse;
+		
 		function start() {
-			var xml = "<object name='root'>"
-				+ "<object name='a1'/>"
-				+ "<object name='list1'/>"
-				+ "<object name='list2'/>"
-				+ "<object name='a2'/>"
-				+ "<object name='list3'/>"
-				+ "</object>";
+			var specification = {
+				elements: {
+					"object": {
+						menu: [{
+							caption: "Save...",
+							action: save,
+							hideIf: function(jsElement){ return jsElement.parent(); }
+						}, {
+							caption: "Load...",
+							action: load,
+							hideIf: function(jsElement){ return jsElement.parent(); }
+						}, {
+							caption: "Add object",
+							action: newObject,
+						}, {
+							caption: "Add proof",
+							action: newProof,
+							hideIf: function(jsElement){ return jsElement.hasChildElement("proof"); }
+						}, {
+							caption: "Delete",
+							action: Xonomy.deleteElement,
+							hideIf: function(jsElement){ jse = jsElement; return !jsElement.parent(); }
+						}],
+						attributes: {
+							"name": {
+								asker: Xonomy.askString
+							}
+						}
+
+					},
+					"proof": {
+						menu: [{
+							caption: "Add deduction",
+							action: newDeduction,
+						}, {
+							caption: "Add application",
+							action: newApplication,
+						}, {
+							caption: "Add binding",
+							action: newBinding,
+						}, {
+							caption: "Add substitution",
+							action: newSubstitution,
+						}, {
+							caption: "Delete",
+							action: Xonomy.deleteElement,
+						}]
+					}
+				}
+			};
+
+			var xml = "<object name='root'><object name='forall'/><object name='root.parameters'/><object name='root.conditions'/><object name='implies'/><object name='root.conclusions'/></object>";
 			var editor = document.getElementById("editor");
 			
-			Xonomy.render(xml, editor, null);
+			Xonomy.render(xml, editor, specification);
 		}
 	</script>
 </head>
