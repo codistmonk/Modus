@@ -36,9 +36,11 @@ public final class ModusServer {
 		final SslContextFactory sslContextFactory = new SslContextFactory();
 		final String keystorePath = arguments.get("keystore", "keystore.jks");
 		final String keystorePass = arguments.get("keystorePass", "YJ2tZvFT");
-		final String trustStorePath = arguments.get("truststore", "truststore.jks");
-		final String trustStorePass = arguments.get("truststorePass", keystorePass);
+//		final String trustStorePath = arguments.get("truststore", "truststore.jks");
+//		final String trustStorePass = arguments.get("truststorePass", keystorePass);
 		final File keystoreFile = new File(keystorePath);
+		final String localGitRoot = arguments.get("localGitRoot", ".modusservlet/git");
+		final String remoteGitRoot = arguments.get("remoteGitRoot", System.getProperty("user.home") + "/git");
 		
 		if (!keystoreFile.exists()) {
 			final Process keytool = Runtime.getRuntime().exec(array(
@@ -59,8 +61,8 @@ public final class ModusServer {
 		
 		sslContextFactory.setKeyStorePath(keystorePath);
 		sslContextFactory.setKeyStorePassword(keystorePass);
-		sslContextFactory.setTrustStorePath(trustStorePath);
-		sslContextFactory.setTrustStorePassword(trustStorePass);
+//		sslContextFactory.setTrustStorePath(trustStorePath);
+//		sslContextFactory.setTrustStorePassword(trustStorePass);
 		
 		final ServerConnector https = new ServerConnector(server, sslContextFactory);
 		
@@ -81,7 +83,7 @@ public final class ModusServer {
 		resourceHandler.setResourceBase("src/modus/web/templates");
 		
 		handlers.addHandler(resourceHandler);
-		handlers.addHandler(new ModusHandler());
+		handlers.addHandler(new ModusHandler(localGitRoot, remoteGitRoot));
 		
 		gzip.setHandler(handlers);
 		

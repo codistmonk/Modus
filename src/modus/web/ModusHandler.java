@@ -21,7 +21,6 @@ import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.errors.NoRemoteRepositoryException;
 import org.w3c.dom.Document;
 
@@ -34,12 +33,12 @@ final class ModusHandler extends AbstractHandler {
 	
 	private final GitContext context;
 	
-	public ModusHandler() {
+	public ModusHandler(final String localGitRoot, final String remoteGitRoot) {
 		this.logger = Log.getLogger(this.getClass());
 		GitContext context = null;
 		
 		try {
-			context = this.newContext();
+			context = this.newContext(localGitRoot, remoteGitRoot);
 		} catch (final Exception exception) {
 			final NoRemoteRepositoryException nrre = findCause(exception, NoRemoteRepositoryException.class);
 			
@@ -59,7 +58,7 @@ final class ModusHandler extends AbstractHandler {
 							
 							Git.init().setDirectory(f).setBare(true).call();
 							
-							context = this.newContext();
+							context = this.newContext(localGitRoot, remoteGitRoot);
 						} catch (final Exception exception1) {
 							throw unchecked(exception1);
 						}
@@ -135,8 +134,8 @@ final class ModusHandler extends AbstractHandler {
 		}
 	}
 	
-	private GitContext newContext() throws GitAPIException {
-		final GitContext result = new GitContext(false, new File(".modusservlet/git").toPath(), "ModusData") {
+	private GitContext newContext(final String localGitRoot, final String remoteGitRoot) throws GitAPIException {
+		return new GitContext(false, localGitRoot, remoteGitRoot, "ModusData") {
 			
 			@Override
 			public final void log(final String message, final Throwable throwable) {
@@ -151,27 +150,6 @@ final class ModusHandler extends AbstractHandler {
 			private static final long serialVersionUID = 7872003944832901702L;
 			
 		};
-		
-		try {
-			result.scmPull();
-		} catch (final JGitInternalException exception) {
-			if ("Could not get advertised Ref for branch master".equals(exception.getMessage())) {
-				final File file = new File(result.getWorkingDirectory(), ".gitignore");
-				
-				try {
-					file.createNewFile();
-				} catch (final IOException exception1) {
-					exception.printStackTrace();
-				}
-				
-				result.scmPush("modus", file.getPath());
-				result.scmPull();
-			} else {
-				throw unchecked(exception);
-			}
-		}
-		
-		return result;
 	}
 	
 }

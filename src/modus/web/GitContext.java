@@ -10,6 +10,7 @@ import java.util.Collection;
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
 
 /**
  * @author codistmonk (creation 2016-08-15)
@@ -18,14 +19,14 @@ public abstract class GitContext extends Context {
 	
 	private final boolean deleteRootOnDestroy;
 	
-	private final Path root;
+	private final Path projectDataRoot;
 	
 	private final Git git;
 	
-	protected GitContext(final boolean deleteRootOnDestroy, final Path root, final String projectName) throws GitAPIException {
-		this.deleteRootOnDestroy = deleteRootOnDestroy;
-		this.root = root;
-		final File directory = new File(root.toFile(), projectName);
+	protected GitContext(final boolean deleteLocalDataOnDestroy, final String localGitRoot, final String remoteGitRoot, final String projectName) throws GitAPIException {
+		this.deleteRootOnDestroy = deleteLocalDataOnDestroy;
+		this.projectDataRoot = new File(localGitRoot).toPath();
+		final File directory = new File(this.projectDataRoot.toFile(), projectName);
 		Git git = null;
 		
 		try {
@@ -33,7 +34,7 @@ public abstract class GitContext extends Context {
 		} catch (final IOException exception) {
 			this.log("Failed to open working directory", exception);
 			
-			final String uri = new File(System.getProperty("user.home"), "git/" + projectName + ".git").toURI().toString();
+			final String uri = new File(remoteGitRoot, projectName + ".git").toURI().toString();
 			
 			this.log("Cloning " + uri + " to " + directory + "...");
 			
@@ -44,6 +45,25 @@ public abstract class GitContext extends Context {
 		}
 		
 		this.git = git;
+		
+		try {
+			this.scmPull();
+		} catch (final JGitInternalException exception) {
+			if ("Could not get advertised Ref for branch master".equals(exception.getMessage())) {
+				final File file = new File(this.getWorkingDirectory(), ".gitignore");
+				
+				try {
+					file.createNewFile();
+				} catch (final IOException exception1) {
+					exception.printStackTrace();
+				}
+				
+				this.scmPush(this.getClass().getName(), file.getPath());
+				this.scmPull();
+			} else {
+				throw unchecked(exception);
+			}
+		}
 	}
 	
 	public final Git getGit() {
@@ -100,7 +120,7 @@ public abstract class GitContext extends Context {
 		
 		if (this.deleteRootOnDestroy) {
 			try {
-				delete(this.root);
+				delete(this.projectDataRoot);
 			} catch (final Exception exception) {
 				this.log("Error", exception);
 			}
