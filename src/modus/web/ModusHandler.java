@@ -1,11 +1,13 @@
 package modus.web;
 
+import static modus.web.AuthenticationTools.getUserId;
 import static multij.tools.Tools.debugPrint;
 import static multij.tools.Tools.unchecked;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.cert.X509Certificate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -96,7 +98,9 @@ final class ModusHandler extends AbstractHandler {
 	@Override
 	public final void handle(final String target, final Request baseRequest, final HttpServletRequest request, final HttpServletResponse response)
 			throws IOException, ServletException {
-		debugPrint(target, request.getAuthType());
+		final String userId = getUserId(request);
+		
+		debugPrint("userId:", userId);
 		
 		response.setContentType("text/html");
 		
