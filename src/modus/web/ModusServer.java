@@ -36,6 +36,8 @@ public final class ModusServer {
 		final SslContextFactory sslContextFactory = new SslContextFactory();
 		final String keystorePath = arguments.get("keystore", "keystore.jks");
 		final String keystorePass = arguments.get("keystorePass", "YJ2tZvFT");
+		final String trustStorePath = arguments.get("truststore", "truststore.jks");
+		final String trustStorePass = arguments.get("truststorePass", keystorePass);
 		final File keystoreFile = new File(keystorePath);
 		
 		if (!keystoreFile.exists()) {
@@ -55,8 +57,10 @@ public final class ModusServer {
 			debugPrint("keytool:", keytool.waitFor());
 		}
 		
-		sslContextFactory.setKeyStorePath(keystoreFile.getPath());
+		sslContextFactory.setKeyStorePath(keystorePath);
 		sslContextFactory.setKeyStorePassword(keystorePass);
+		sslContextFactory.setTrustStorePath(trustStorePath);
+		sslContextFactory.setTrustStorePassword(trustStorePass);
 		
 		final ServerConnector https = new ServerConnector(server, sslContextFactory);
 		

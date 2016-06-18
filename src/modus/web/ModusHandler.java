@@ -13,6 +13,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import multij.xml.XMLTools;
+
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.util.log.Log;
@@ -21,6 +23,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.errors.NoRemoteRepositoryException;
+import org.w3c.dom.Document;
 
 /**
  * @author codistmonk (creation 2016-06-05)
@@ -94,25 +97,42 @@ final class ModusHandler extends AbstractHandler {
 	@Override
 	public final void handle(final String target, final Request baseRequest, final HttpServletRequest request, final HttpServletResponse response)
 			throws IOException, ServletException {
-		debugPrint(target);
+		debugPrint(target, request.getAuthType());
 		
 		response.setContentType("text/html");
 		
 		final PrintWriter out = response.getWriter();
+		Throwable issue = null;
 		
 		if (target.startsWith("/database/post/")) {
-			response.setStatus(HttpServletResponse.SC_OK);
-			
-			// TODO
-			
-			out.println("ok");
-		} else {
-			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-			
-			out.println("error");
+			try {
+				final Document xml = XMLTools.parse(request.getParameter("xml"));
+				final String moduleName = XMLTools.getString(xml, "/object/@name");
+				
+				debugPrint(moduleName);
+				// TODO
+				
+				response.setStatus(HttpServletResponse.SC_OK);
+				
+				out.println("ok");
+				
+				baseRequest.setHandled(true);
+				
+				return;
+			} catch (final Throwable exception) {
+				this.log("error", exception);
+				issue = exception;
+				exception.printStackTrace();
+			}
 		}
 		
-		baseRequest.setHandled(true);
+		{
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+			
+			out.println("error: " + issue);
+			
+			baseRequest.setHandled(true);
+		}
 	}
 	
 	private GitContext newContext() throws GitAPIException {
