@@ -1,12 +1,12 @@
 package modus.web;
 
+import static modus.web.AuthenticationTools.*;
 import static multij.tools.Tools.*;
 
 import java.io.File;
 
 import multij.tools.CommandLineArgumentsParser;
 import multij.tools.IllegalInstantiationException;
-import multij.tools.Launcher;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -34,35 +34,34 @@ public final class ModusServer {
 		final Server server = new Server();
 		final int port = arguments.get1("port", 1443);
 		final SslContextFactory sslContextFactory = new SslContextFactory();
-		final String keystorePath = arguments.get("keystore", "keystore.jks");
-		final String keystorePass = arguments.get("keystorePass", "YJ2tZvFT");
-//		final String trustStorePath = arguments.get("truststore", "truststore.jks");
-//		final String trustStorePass = arguments.get("truststorePass", keystorePass);
-		final File keystoreFile = new File(keystorePath);
-		final String localGitRoot = arguments.get("localGitRoot", ".modusservlet/git");
-		final String remoteGitRoot = arguments.get("remoteGitRoot", System.getProperty("user.home") + "/git");
+		final String keyStorePath = arguments.get("keystore", "keystore.jks");
+		final String keyStorePass = arguments.get("keystorepass", "YJ2tZvFT");
+		final String trustStorePath = arguments.get("truststore", "truststore.jks");
+		final String trustStorePass = arguments.get("truststorepass", keyStorePass);
+		final File keyStoreFile = new File(keyStorePath);
+		final File trustStoreFile = new File(trustStorePath);
+		final String localGitRoot = arguments.get("localgit", ".modusservlet/git");
+		final String remoteGitRoot = arguments.get("remotegit", System.getProperty("user.home") + "/git");
 		
-		if (!keystoreFile.exists()) {
-			final Process keytool = Runtime.getRuntime().exec(array(
-					"keytool", "-genkey",
-					"-keyalg", "RSA",
-					"-alias", "selfsigned",
-					"-keystore", "keystore.jks",
-					"-storepass", keystorePass,
-					"-keypass", keystorePass,
-					"-validity", "360",
-					"-keysize", "2048",
-					"-dname", "cn=Modus, ou=Modus, o=Modus, c=XX"));
-			
-			Launcher.pipe(keytool.getErrorStream(), System.err);
-			
-			debugPrint("keytool:", keytool.waitFor());
+		if (!keyStoreFile.exists()) {
+			generateKey(keyStorePath, keyStorePass, "Modus", keyStorePass);
 		}
 		
-		sslContextFactory.setKeyStorePath(keystorePath);
-		sslContextFactory.setKeyStorePassword(keystorePass);
-//		sslContextFactory.setTrustStorePath(trustStorePath);
-//		sslContextFactory.setTrustStorePassword(trustStorePass);
+		sslContextFactory.setKeyStorePath(keyStorePath);
+		sslContextFactory.setKeyStorePassword(keyStorePass);
+		
+		if (!trustStoreFile.exists()) {
+			importKeyStore(keyStorePath, keyStorePass, trustStorePath, trustStorePass);
+			
+			final String userId = "cm";
+			
+			generatePFX(trustStorePath, trustStorePass, userId, userId + "-modus");
+		}
+		
+		sslContextFactory.setTrustStorePath(trustStorePath);
+		sslContextFactory.setTrustStorePassword(trustStorePass);
+		
+		sslContextFactory.setWantClientAuth(true);
 		
 		final ServerConnector https = new ServerConnector(server, sslContextFactory);
 		
